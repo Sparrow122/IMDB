@@ -4,22 +4,21 @@ import pandas as pd
 import xlsxwriter
 from collections import defaultdict
 
-def get_data(url):
+def get_data(url,number_of_pages):
     headers = {
     "User-Agent": 'Mozilla/5.0(Windows NT 6.1Win64x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 87.0 .4280 .141 Safari / 537.36 '}
     res = requests.get(url,headers)
     soup1 = BeautifulSoup(res.content,'html.parser')
     movie_rows_list = soup1.find_all('div',{"class":"lister-item mode-advanced"})
     next_page = soup1.find('a',{"class":"lister-page-next next-page"}).attrs['href']
-    
-    while next_page:
-        next_page = "https://www.imdb.com"+soup1.find('a',{"class":"lister-page-next next-page"}).attrs['href']
-        print (next_page)
-        save_data(movie_rows_list)
-        if ('3001' in next_page):
-            break
-        else:
-            return get_data(next_page)
+    next_page = "https://www.imdb.com"+soup1.find('a',{"class":"lister-page-next next-page"}).attrs['href']
+    print (next_page)
+    save_data(movie_rows_list)
+    if (number_of_pages == 0):
+        return
+    else:
+        print (number_of_pages)
+        return get_data(next_page,number_of_pages-1)
     
 
 def save_data(movie_rows_list):
@@ -53,8 +52,9 @@ movie_details = {'Movie_Name': [],
                     'Votes':[],
                     'Gross_in_million_dollar':[]}
 start_url = 'https://www.imdb.com/search/title/?release_date=2018-01-01,2018-12-31&sort=num_votes,desc'
-#get_data(start_url)
-#df = pd.DataFrame(movie_details)
-#writer = pd.ExcelWriter('D:\pythonprogs\movies.xlsx',engine='xlsxwriter')
-#df.to_excel(writer,sheet_name='Movies')
-#writer.save()
+number_of_pages = int(input("Number of pages to scrape:",))
+get_data(start_url,number_of_pages)
+df = pd.DataFrame(movie_details)
+writer = pd.ExcelWriter('D:\pythonprogs\movies.xlsx',engine='xlsxwriter')
+df.to_excel(writer,sheet_name='Movies')
+writer.save()
